@@ -6,11 +6,13 @@ import (
 	"net/http"
 )
 
-func routes() http.Handler {
+func routes(rh *handlers.RestHandlers) http.Handler {
 	mux := pat.New()
 
-	mux.Get("/", http.HandlerFunc(handlers.Home))
-	mux.Get("/ws", http.HandlerFunc(handlers.WsEndpoint))
+	mux.Get("/", http.HandlerFunc(rh.Home))
+
+	// TODO: enable ws
+	//mux.Get("/ws", http.HandlerFunc(handlers.WsEndpoint))
 
 	fileServer := http.FileServer(http.Dir("./static/"))
 	mux.Get("/static/", http.StripPrefix("/static", fileServer))

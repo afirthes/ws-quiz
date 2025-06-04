@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+#  db:
+#    image: postgres:16.3
+#    container_name: postgres-db
+#    environment:
+#      POSTGRES_DB: socialnetwork
+#      POSTGRES_USER: admin
+#      POSTGRES_PASSWORD: adminpassword
+#    networks:
+#      - backend
+#    volumes:
+#      - db-data:/var/lib/postgresql/data
+#      - ./scripts/db_init.sql:/docker-entrypoint-initdb.d/db_init.sql
+#    ports:
+#      - "5432:5432"
+
+  redis:
+    image: redis/redis-stack:latest
+    container_name: redis-stack
+    ports:
+      - "6379:6379"        # Redis database
+      - "8001:8001"        # Redis Stack web UI
+    restart: always
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: redis-commander
+    platform: linux/amd64
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"        # Redis Commander web UI
+    depends_on:
+      - redis
+    restart: always
+  
+volumes:
+  db-data:
+
+networks:
+  backend:
+    driver: bridge

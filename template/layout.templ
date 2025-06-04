@@ -1,0 +1,21 @@
+package template
+
+templ RootLayout(title string, content ...templ.Component) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<script src="/static/tailwind.js"></script>
+			<script src="/static/script.js"></script>
+			<title>{ title }</title>
+		</head>
+		<body class="bg-gray-100 p-6 text-base">
+			<div class="max-w-6xl mx-auto space-y-6">
+				for _, c := range content {
+					@c
+				}
+			</div>
+		</body>
+	</html>
+}
