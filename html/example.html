@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Интерфейс викторины</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-4 text-xs">
+<div class="max-w-6xl mx-auto space-y-4">
+
+    <!-- Верхний ряд -->
+    <div class="flex flex-col md:flex-row gap-4">
+        <!-- Список викторин -->
+        <div class="bg-white p-3 rounded-md shadow-sm space-y-2 w-full md:w-1/2">
+            <h1 class="text-lg font-semibold text-gray-800">Список викторин</h1>
+            <ul class="space-y-2">
+                <li class="flex items-center justify-between bg-gray-50 p-2 rounded-md shadow-sm">
+                    <span class="text-gray-700">История</span>
+                    <button class="bg-blue-500 hover:bg-blue-600 text-white font-medium px-2 py-1 rounded text-xs">Начать</button>
+                </li>
+                <li class="flex items-center justify-between bg-gray-50 p-2 rounded-md shadow-sm">
+                    <span class="text-gray-700">География</span>
+                    <button class="bg-blue-500 hover:bg-blue-600 text-white font-medium px-2 py-1 rounded text-xs">Начать</button>
+                </li>
+                <li class="flex items-center justify-between bg-gray-50 p-2 rounded-md shadow-sm">
+                    <span class="text-gray-700">Математика</span>
+                    <button class="bg-blue-500 hover:bg-blue-600 text-white font-medium px-2 py-1 rounded text-xs">Начать</button>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Настройки участника -->
+        <div class="bg-white p-3 rounded-md shadow-sm space-y-3 w-full md:w-1/2">
+            <div>
+                <label class="block text-gray-700 mb-1">Nickname участника/организатора</label>
+                <div class="flex items-center space-x-2">
+                    <input type="text" class="flex-1 px-2 py-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-blue-400" placeholder="Введите имя">
+                    <span class="bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded">Connected</span>
+                    <span class="bg-purple-100 text-purple-800 text-[10px] font-semibold px-2 py-0.5 rounded">QuizHost</span>
+                </div>
+            </div>
+            <div>
+                <label class="block text-gray-700 mb-1">UUID Викторины</label>
+                <div class="flex items-center space-x-2">
+                    <input type="text" class="flex-1 px-2 py-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-blue-400" placeholder="Введите UUID">
+                    <button class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs">Присоединиться</button>
+                    <button class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">Выйти</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Нижний ряд -->
+    <div class="flex flex-col md:flex-row gap-4">
+        <!-- Список участников -->
+        <div class="bg-white p-3 rounded-md shadow-sm w-full md:w-1/2 flex flex-col justify-between">
+            <div>
+                <h2 class="text-sm font-semibold text-gray-800 mb-2">Участники</h2>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <div class="flex items-center space-x-2 border border-gray-300 rounded px-2 py-2">
+                        <img src="https://robohash.org/user1?set=set3" alt="user" class="w-12 h-12 rounded-full">
+                        <div class="flex flex-col">
+                            <span class="text-gray-700 text-sm">Анна</span>
+                            <span class="text-xs text-gray-500">Очки: 120</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2 border border-gray-300 rounded px-2 py-2">
+                        <img src="https://robohash.org/user2?set=set3" alt="user" class="w-12 h-12 rounded-full">
+                        <div class="flex flex-col">
+                            <span class="text-gray-700 text-sm">Макс</span>
+                            <span class="text-xs text-gray-500">Очки: 85</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2 border border-gray-300 rounded px-2 py-2">
+                        <img src="https://robohash.org/user3?set=set3" alt="user" class="w-12 h-12 rounded-full">
+                        <div class="flex flex-col">
+                            <span class="text-gray-700 text-sm">Оля</span>
+                            <span class="text-xs text-gray-500">Очки: 102</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2 border border-gray-300 rounded px-2 py-2">
+                        <img src="https://robohash.org/user4?set=set3" alt="user" class="w-12 h-12 rounded-full">
+                        <div class="flex flex-col">
+                            <span class="text-gray-700 text-sm">Игорь</span>
+                            <span class="text-xs text-gray-500">96</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2 border border-gray-300 rounded px-2 py-2">
+                        <img src="https://robohash.org/user4?set=set3" alt="user" class="w-12 h-12 rounded-full">
+                        <div class="flex flex-col">
+                            <span class="text-gray-700 text-sm">Игорь</span>
+                            <span class="text-xs text-gray-500">96</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2 border border-gray-300 rounded px-2 py-2">
+                        <img src="https://robohash.org/user4?set=set3" alt="user" class="w-12 h-12 rounded-full">
+                        <div class="flex flex-col">
+                            <span class="text-gray-700 text-sm">Игорь</span>
+                            <span class="text-xs text-gray-500">96</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-between gap-2">
+                <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-xs w-full">Начать викторину</button>
+                <button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-xs w-full">Прервать викторину</button>
+            </div>
+        </div>
+
+        <!-- Вопрос и ответы -->
+        <div class="bg-white p-3 rounded-md shadow-sm w-full md:w-1/2 relative">
+            <!-- Очки -->
+            <div class="absolute top-2 right-2 text-sm font-semibold text-blue-700">
+                Очки: 125
+            </div>
+
+            <h2 class="text-sm font-semibold text-gray-800 mb-2">Текущий вопрос</h2>
+
+            <!-- Таймер -->
+            <div class="w-full bg-gray-200 rounded-full h-2 mb-3">
+                <div class="bg-blue-500 h-2 rounded-full" style="width: 60%;"></div>
+            </div>
+
+            <!-- Вопрос -->
+            <input type="text" class="w-full px-2 py-1 mb-2 border border-gray-300 rounded text-xs" placeholder="Введите вопрос">
+
+            <!-- Варианты ответа -->
+            <div class="space-y-1 mb-2">
+                <label class="flex items-center space-x-2">
+                    <input type="checkbox" class="text-blue-600 rounded">
+                    <span>Ответ A</span>
+                </label>
+                <label class="flex items-center space-x-2">
+                    <input type="checkbox" class="text-blue-600 rounded">
+                    <span>Ответ B</span>
+                </label>
+                <label class="flex items-center space-x-2">
+                    <input type="checkbox" class="text-blue-600 rounded">
+                    <span>Ответ C</span>
+                </label>
+                <label class="flex items-center space-x-2">
+                    <input type="checkbox" class="text-blue-600 rounded">
+                    <span>Ответ D</span>
+                </label>
+            </div>
+
+            <!-- Кнопка ответить -->
+            <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded text-xs mb-3">Ответить</button>
+
+            <!-- Ответившие -->
+            <div class="border-t pt-2 mt-2">
+                <h3 class="text-xs font-semibold mb-2">Ответившие участники:</h3>
+                <div class="flex flex-wrap gap-2">
+                    <!-- Правильный -->
+                    <div class="flex items-center space-x-2 bg-green-50 border border-black text-green-700 rounded px-2 py-2">
+                        <img src="https://robohash.org/user5?set=set4" alt="user" class="w-12 h-12 rounded-full">
+                        <span>Наташа</span>
+                    </div>
+                    <!-- Неправильный -->
+                    <div class="flex items-center space-x-2 bg-red-50 border border-black text-red-700 rounded px-2 py-2">
+                        <img src="https://robohash.org/user6?set=set4" alt="user" class="w-12 h-12 rounded-full">
+                        <span>Сергей</span>
+                    </div>
+                    <!-- Правильный -->
+                    <div class="flex items-center space-x-2 bg-green-50 border border-black text-green-700 rounded px-2 py-2">
+                        <img src="https://robohash.org/user5?set=set4" alt="user" class="w-12 h-12 rounded-full">
+                        <span>Наташа</span>
+                    </div>
+                    <!-- Неправильный -->
+                    <div class="flex items-center space-x-2 bg-red-50 border border-black text-red-700 rounded px-2 py-2">
+                        <img src="https://robohash.org/user6?set=set4" alt="user" class="w-12 h-12 rounded-full">
+                        <span>Сергей</span>
+                    </div>
+                    <!-- Правильный -->
+                    <div class="flex items-center space-x-2 bg-green-50 border border-black text-green-700 rounded px-2 py-2">
+                        <img src="https://robohash.org/user5?set=set4" alt="user" class="w-12 h-12 rounded-full">
+                        <span>Наташа</span>
+                    </div>
+                    <!-- Неправильный -->
+                    <div class="flex items-center space-x-2 bg-red-50 border border-black text-red-700 rounded px-2 py-2">
+                        <img src="https://robohash.org/user6?set=set4" alt="user" class="w-12 h-12 rounded-full">
+                        <span>Сергей</span>
+                    </div>
+                    <!-- Правильный -->
+                    <div class="flex items-center space-x-2 bg-green-50 border border-black text-green-700 rounded px-2 py-2">
+                        <img src="https://robohash.org/user5?set=set4" alt="user" class="w-12 h-12 rounded-full">
+                        <span>Наташа</span>
+                    </div>
+                    <!-- Неправильный -->
+                    <div class="flex items-center space-x-2 bg-red-50 border border-black text-red-700 rounded px-2 py-2">
+                        <img src="https://robohash.org/user6?set=set4" alt="user" class="w-12 h-12 rounded-full">
+                        <span>Сергей</span>
+                    </div>
+                    <!-- Правильный -->
+                    <div class="flex items-center space-x-2 bg-green-50 border border-black text-green-700 rounded px-2 py-2">
+                        <img src="https://robohash.org/user5?set=set4" alt="user" class="w-12 h-12 rounded-full">
+                        <span>Наташа</span>
+                    </div>
+                    <!-- Неправильный -->
+                    <div class="flex items-center space-x-2 bg-red-50 border border-black text-red-700 rounded px-2 py-2">
+                        <img src="https://robohash.org/user6?set=set4" alt="user" class="w-12 h-12 rounded-full">
+                        <span>Убер Пупукр Нейм</span>
+                    </div>
+                    <!-- Правильный -->
+                    <div class="flex items-center space-x-2 bg-green-50 border border-black text-green-700 rounded px-2 py-2">
+                        <img src="https://robohash.org/user5?set=set4" alt="user" class="w-12 h-12 rounded-full">
+                        <span>Наташа</span>
+                    </div>
+                    <!-- Неправильный -->
+                    <div class="flex items-center space-x-2 bg-red-50 border border-black text-red-700 rounded px-2 py-2">
+                        <img src="https://robohash.org/user6?set=set4" alt="user" class="w-12 h-12 rounded-full">
+                        <span>Сергей</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

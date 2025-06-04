@@ -1,17 +1,38 @@
 package main
 
 import (
-	"github.com/afirthes/ws-quiz/internal/handlers"
+	"github.com/afirthes/ws-quiz/internal/env"
 	"log"
-	"net/http"
 )
 
+var version = "0.0.1"
+
+type config struct {
+	addr string
+	env  string
+	rdb  rdbConfig
+}
+
+type rdbConfig struct {
+	addr string
+}
+
 func main() {
-	mux := routes()
 
-	log.Println("Starting channel listener")
-	go handlers.ListenToWsChannel()
+	config := config{
+		addr: env.GetString("APP_ADDR", ":8080"),
+		rdb: rdbConfig{
+			addr: env.GetString("REDIS_ADDR", "localhost:6379"),
+		},
+	}
 
-	log.Println("Starting web server on port 8080")
-	_ = http.ListenAndServe(":8080", mux)
+	app := &application{
+		config: config,
+	}
+
+	err := app.run(routes())
+	if err != nil {
+		log.Fatalf("Error starting application: %v", err)
+	}
+
 }
