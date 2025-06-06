@@ -5,15 +5,18 @@ templ UserSetup() {
 		<div>
 			<label class="block text-gray-700 mb-2 text-lg">Nickname участника/организатора</label>
 			<div class="flex items-center space-x-3">
-				<input type="text" class="flex-1 px-4 py-2 border border-gray-300 rounded text-base focus:ring-2 focus:ring-blue-400" placeholder="Введите имя"/>
-				<span class="bg-green-100 text-green-800 text-sm font-semibold px-3 py-1 rounded">Connected</span>
-				<span class="bg-purple-100 text-purple-800 text-sm font-semibold px-3 py-1 rounded">QuizHost</span>
+				<input id="userNameInput" type="text" class="flex-1 px-4 py-2 border border-gray-300 rounded text-base focus:ring-2 focus:ring-blue-400" placeholder="Введите имя"/>
+				<div id="status"></div>
 			</div>
+		</div>
+		<div>
+				<button id="ws-connect" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-base">Присоединиться</button>
+        		<button id="ws-leave" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-base">Выйти</button>
 		</div>
 		<div>
 			<label class="block text-gray-700 mb-2 text-lg">UUID Викторины</label>
 			<div class="flex items-center space-x-3">
-				<input type="text" class="flex-1 px-4 py-2 border border-gray-300 rounded text-base focus:ring-2 focus:ring-blue-400" placeholder="Введите UUID"/>
+				<input id="quizid" type="text" class="flex-1 px-4 py-2 border border-gray-300 rounded text-base focus:ring-2 focus:ring-blue-400" placeholder="Введите UUID"/>
 				<button onclick={ templ.JSFuncCall("joinQuiz") } class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-base">Присоединиться</button>
 				<button onclick={ templ.JSFuncCall("leaveQuiz") } class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-base">Выйти</button>
 			</div>

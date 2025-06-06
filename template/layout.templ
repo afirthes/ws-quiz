@@ -8,6 +8,7 @@ templ RootLayout(title string, content ...templ.Component) {
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<script src="/static/tailwind.js"></script>
 			<script src="/static/script.js"></script>
+			<script src="/static/reconnecting-websocket.min.js"></script>
 			<title>{ title }</title>
 		</head>
 		<body class="bg-gray-100 p-6 text-base">
@@ -19,3 +20,5 @@ templ RootLayout(title string, content ...templ.Component) {
 		</body>
 	</html>
 }
+
+
