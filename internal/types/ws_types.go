@@ -44,3 +44,68 @@ type WsLeavedQuizBroadcast struct {
 	UserName   string `json:"user_name"`
 	GSessionId string `json:"gsession_id"`
 }
+
+type WsNextQuizQuestionRequest struct {
+	WsPayload
+	QuestionId    string   `json:"question_id"`
+	GSessionId    string   `json:"gsession_id"`
+	Question      string   `json:"question"`
+	Answers       []string `json:"answers"`
+	CorrectAnswer int      `json:"correct_answer"`
+	Cost          int      `json:"cost"`
+}
+
+type WsNextQuizQuestionBroadcast struct {
+	WsPayload
+	QuestionId string   `json:"question_id"`
+	GSessionId string   `json:"gsession_id"`
+	Question   string   `json:"question"`
+	Answers    []string `json:"answers"`
+	Cost       int      `json:"cost"`
+}
+
+type WsAnswerRequest struct {
+	WsPayload
+	QuestionId string `json:"question_id"`
+	GSessionId string `json:"gsession_id"`
+	Answer     int    `json:"answer"`
+}
+
+type WsParticipantAnsweredBroadcast struct {
+	WsPayload
+	GSessionId string `json:"gsession_id"`
+	QuestionId string `json:"question_id"`
+	UserName   string `json:"user_name"`
+	UserId     string `json:"user_id"`
+	Correct    bool   `json:"correct"`
+}
+
+type WsFinishQuestionRequest struct {
+	WsPayload
+	QuestionId string `json:"question_id"`
+	GSessionId string `json:"gsession_id"`
+}
+
+type Score struct {
+	UserID   string `json:"user_id"`
+	UserName string `json:"user_name"`
+	Score    int    `json:"score"`
+}
+
+type WsFinishQuestionBroadcast struct {
+	WsPayload
+	QuestionId string  `json:"question_id"`
+	GSessionId string  `json:"gsession_id"`
+	Scores     []Score `json:"scores"`
+}
+
+type WsFinishQuizRequest struct {
+	WsPayload
+	GSessionId string `json:"gsession_id"`
+}
+
+type WsFinishQuizBroadcast struct {
+	WsPayload
+	GSessionId string  `json:"gsession_id"`
+	Scores     []Score `json:"scores"`
+}

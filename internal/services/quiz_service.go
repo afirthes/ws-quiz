@@ -5,20 +5,70 @@ import (
 	"github.com/afirthes/ws-quiz/internal/types"
 	"github.com/segmentio/ksuid"
 	"go.uber.org/zap"
+	"sync"
 )
 
 type QuizService struct {
-	log          *zap.SugaredLogger
-	sessions     map[string]*types.GameSession   //UserId -> GameSession
-	participants map[string][]*types.Participant //GameSession -> Participants
+	log              *zap.SugaredLogger
+	mu               *sync.Mutex
+	sessions         map[string]*types.GameSession   //UserId -> GameSession
+	participants     map[string][]*types.Participant //GameSession -> Participants
+	questions        map[string]*types.Question
+	questionsAnswers map[string][]string
 }
 
 func NewQuizService(log *zap.SugaredLogger) *QuizService {
 	return &QuizService{
-		log:          log,
-		sessions:     make(map[string]*types.GameSession),
-		participants: make(map[string][]*types.Participant),
+		log:              log,
+		mu:               &sync.Mutex{},
+		sessions:         make(map[string]*types.GameSession),
+		participants:     make(map[string][]*types.Participant),
+		questions:        make(map[string]*types.Question),
+		questionsAnswers: make(map[string][]string),
 	}
+}
+
+func (qs *QuizService) AddQuestion(q *types.Question) {
+	qs.questions[q.QuestionId] = q
+}
+
+func (qs *QuizService) FinishQuestion(questionId string) *types.Question {
+	if v, ok := qs.questions[questionId]; ok {
+		v.IsFinished = true
+		return v
+	}
+	return nil
+}
+
+func (qs *QuizService) CheckAnsSaveAnswer(questionId string, answer int, p *types.Participant) bool {
+	qs.mu.Lock()
+	defer qs.mu.Unlock()
+
+	if a, ok := qs.questions[questionId]; ok {
+		if a.IsFinished {
+			return false
+		}
+
+		if a.CorrectAnswer == answer {
+
+			// Если уже отвечал - возвращаем true
+			for _, pa := range qs.questionsAnswers[questionId] {
+				if pa == p.UserId {
+					return true
+				}
+			}
+
+			// добавляем в список ответивших
+			qs.questionsAnswers[questionId] = append(qs.questionsAnswers[questionId], p.UserId)
+			return true
+		}
+	}
+
+	return false
+}
+
+func (qs *QuizService) GetAnswers(questionId string) []string {
+	return qs.questionsAnswers[questionId]
 }
 
 func (qs *QuizService) StartQuiz(quizId string, creator *types.Participant) (*types.GameSession, error) {
@@ -29,9 +79,22 @@ func (qs *QuizService) StartQuiz(quizId string, creator *types.Participant) (*ty
 		QuizId:        quizId,
 		Creator:       creator,
 		GameSessionId: ksuid.New().String(),
+		IsFinished:    false,
 	}
 	qs.sessions[creator.UserId] = gs
 	return gs, nil
+}
+
+func (qs *QuizService) FinishQuiz(gsessionId string) error {
+	qs.mu.Lock()
+	defer qs.mu.Unlock()
+
+	if gs, ok := qs.sessions[gsessionId]; ok && !gs.IsFinished {
+		gs.IsFinished = true
+		return nil
+	} else {
+		return fmt.Errorf("gsession %s has already finished quiz", gsessionId)
+	}
 }
 
 func (qs *QuizService) JoinGameSession(gsessionId string, p *types.Participant) error {
@@ -88,6 +151,9 @@ func (qs *QuizService) LeaveAllGameSessions(p *types.Participant) error {
 }
 
 func (qs *QuizService) LeaveGameSession(gsessionId string, p *types.Participant) error {
+	qs.mu.Lock()
+	defer qs.mu.Unlock()
+
 	participants, ok := qs.participants[gsessionId]
 	if !ok {
 		return fmt.Errorf("game session %s not found", gsessionId)
@@ -112,14 +178,6 @@ func (qs *QuizService) LeaveGameSession(gsessionId string, p *types.Participant)
 	return nil
 }
 
-func (qs *QuizService) NextQuestion(uuid string) error {
-	return nil
-}
-
-func (qs *QuizService) FinishQuiz(uuid string) error {
-	return nil
-}
-
 func (qs *QuizService) GetParticipants(gsessionId string) []*types.Participant {
 	return qs.participants[gsessionId]
 }
@@ -134,5 +192,5 @@ func (qs *QuizService) GetParticipantsWithCreator(gsessionId string) ([]*types.P
 			return append(qs.participants[gsessionId], creator), nil
 		}
 	}
-	return nil, fmt.Errorf("Could not find creator for game session %s", gsessionId)
+	return nil, fmt.Errorf("could not find creator for game session %s", gsessionId)
 }

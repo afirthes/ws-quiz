@@ -74,7 +74,7 @@ func (wsh *WsHandlers) WsEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if connection already established
-	if _, ok := wsh.clients[p.UserName]; ok {
+	if _, ok := wsh.clients[p.UserId]; ok {
 		log.Printf("Client %s already connected", userName)
 		wsh.errorHandler.ForbiddenResponse(w, r)
 		return
@@ -117,8 +117,8 @@ func (wsh *WsHandlers) WsEndpoint(w http.ResponseWriter, r *http.Request) {
 	var response types.WsPayload
 	response.Action = "CONNECTED"
 
-	if _, ok := wsh.clients[p.UserName]; !ok {
-		wsh.clients[p.UserName] = pc
+	if _, ok := wsh.clients[p.UserId]; !ok {
+		wsh.clients[p.UserId] = pc
 	} else {
 		log.Printf("Client %s already connected", userName)
 		return
@@ -222,9 +222,128 @@ func (wsh *WsHandlers) handleMessage(p *WsPayloadWithParticipant) error {
 		}
 		wsh.broadcastAll(broadcast, req.GSessionId)
 		return nil
+
+	case "NEXT_QUESTION":
+		var req types.WsNextQuizQuestionRequest
+		if err := json.Unmarshal(p.msg, &req); err != nil {
+			return fmt.Errorf("failed to parse WsStartQuizRequest: %w", err)
+		}
+
+		wsh.quizService.AddQuestion(&types.Question{
+			QuestionId:    req.QuestionId,
+			Question:      req.Question,
+			Answers:       req.Answers,
+			CorrectAnswer: req.CorrectAnswer,
+			Cost:          req.Cost,
+			IsFinished:    false,
+		})
+
+		broadcast := types.WsNextQuizQuestionBroadcast{
+			WsPayload:  types.WsPayload{Action: "NEXT_QUESTION_BROADCAST"},
+			QuestionId: req.QuestionId,
+			GSessionId: req.GSessionId,
+			Question:   req.Question,
+			Answers:    req.Answers,
+			Cost:       req.Cost,
+		}
+		wsh.broadcastParticipants(broadcast, req.GSessionId)
+		return nil
+
+	case "ANSWER_QUESTION":
+		var req types.WsAnswerRequest
+		if err := json.Unmarshal(p.msg, &req); err != nil {
+			return fmt.Errorf("failed to parse WsStartQuizRequest: %w", err)
+		}
+
+		broadcast := types.WsParticipantAnsweredBroadcast{
+			WsPayload:  types.WsPayload{Action: "QUESTION_ANSWERED_BROADCAST"},
+			GSessionId: req.GSessionId,
+			QuestionId: req.QuestionId,
+			Correct:    wsh.quizService.CheckAnsSaveAnswer(req.QuestionId, req.Answer, p.participant.Participant),
+			UserId:     p.participant.UserId,
+			UserName:   p.participant.UserName,
+		}
+		wsh.broadcastAll(broadcast, req.GSessionId)
+		return nil
+
+	case "FINISH_QUESTION":
+		var req types.WsFinishQuestionRequest
+		if err := json.Unmarshal(p.msg, &req); err != nil {
+			return fmt.Errorf("failed to parse WsStartQuizRequest: %w", err)
+		}
+
+		q := wsh.quizService.FinishQuestion(req.QuestionId)
+		answers := wsh.quizService.GetAnswers(req.QuestionId)
+
+		n := len(answers)
+		if n == 0 {
+			return nil
+		}
+
+		broadcast := types.WsFinishQuestionBroadcast{
+			WsPayload:  types.WsPayload{Action: "QUESTION_FINISHED_BROADCAST"},
+			QuestionId: req.QuestionId,
+			GSessionId: req.GSessionId,
+			Scores:     make([]types.Score, 0, n),
+		}
+
+		step := float64(q.Cost) / float64(n)
+		for i, userID := range answers {
+			score := float64(q.Cost) - step*float64(i)
+			if score < 0 {
+				score = 0
+			}
+			if u, ok := wsh.clients[userID]; ok {
+				u.Score += int(score)
+				broadcast.Scores = append(broadcast.Scores, types.Score{
+					UserName: u.UserName,
+					UserID:   u.UserId,
+					Score:    int(score),
+				})
+			}
+		}
+
+		wsh.broadcastAll(broadcast, req.GSessionId)
+		return nil
+
+	case "FINISH_QUIZ_SESSION":
+		var req types.WsFinishQuizRequest
+		if err := json.Unmarshal(p.msg, &req); err != nil {
+			return fmt.Errorf("failed to parse WsStartQuizRequest: %w", err)
+		}
+
+		err := wsh.quizService.FinishQuiz(req.GSessionId)
+		if err != nil {
+			return fmt.Errorf("failed to finish quiz: %w", err)
+		}
+
+		ps := wsh.quizService.GetParticipants(req.GSessionId)
+
+		broadcast := types.WsFinishQuizBroadcast{
+			WsPayload:  types.WsPayload{Action: "QUESTION_FINISHED_BROADCAST"},
+			GSessionId: req.GSessionId,
+			Scores:     make([]types.Score, 0, len(ps)),
+		}
+		for _, p := range ps {
+			if u, ok := wsh.clients[p.UserId]; ok {
+				broadcast.Scores = append(broadcast.Scores, types.Score{
+					UserName: u.UserName,
+					UserID:   u.UserId,
+					Score:    u.Score,
+				})
+			}
+		}
+
+		wsh.broadcastAll(broadcast, req.GSessionId)
+		return nil
+
 	default:
 		return fmt.Errorf("unknown action: %s", base.Action)
 	}
+}
+
+func (wsh *WsHandlers) broadcastParticipants(json any, gsessionId string) {
+	wsh.broadcast(wsh.quizService.GetParticipants(gsessionId), json)
 }
 
 func (wsh *WsHandlers) broadcastAll(json any, gsessionId string) {
@@ -232,18 +351,15 @@ func (wsh *WsHandlers) broadcastAll(json any, gsessionId string) {
 	if err != nil {
 		log.Printf("Unable to broadcast %v", err)
 	}
+	wsh.broadcast(piqs, json)
+}
+
+func (wsh *WsHandlers) broadcast(piqs []*types.Participant, json any) {
 	for _, piq := range piqs {
-		if v, ok := wsh.clients[piq.UserName]; ok {
+		if v, ok := wsh.clients[piq.UserId]; ok {
 			err := v.Conn.WriteJSON(json)
 			if err != nil {
 				log.Printf("Failed to broadcast to user %s: %v", piq.UserName, err)
-			}
-		} else {
-			v.Participant.GSessionId = ""
-			v.Participant.IsHost = false
-			err := wsh.quizService.LeaveGameSession(gsessionId, v.Participant)
-			if err != nil {
-				log.Printf("Failed removing user %s from game session %s: %v", v.Participant.UserName, gsessionId, err)
 			}
 		}
 	}
