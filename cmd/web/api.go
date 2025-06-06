@@ -2,22 +2,25 @@ package main
 
 import (
 	"github.com/afirthes/ws-quiz/internal/errors"
+	"github.com/afirthes/ws-quiz/internal/handlers"
 	"github.com/afirthes/ws-quiz/internal/services"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
+	"log"
 	"net/http"
 	"time"
 )
 
-type application struct {
-	config       config
-	logger       *zap.SugaredLogger
-	errorHandler *errors.ErrorHandler
-	quizService  services.QuizService
+type Application struct {
+	Config       Config
+	Logger       *zap.SugaredLogger
+	ErrorHandler *errors.ErrorHandler
+	QuizService  *services.QuizService
+	UserService  *services.UserService
 }
 
-func (app *application) mount() http.Handler {
+func (app *Application) mount() http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -37,18 +40,18 @@ func (app *application) mount() http.Handler {
 	return r
 }
 
-func (app *application) run(mux http.Handler) error {
+func (app *Application) run(mux http.Handler, wsh *handlers.WsHandlers) error {
 	srv := &http.Server{
-		Addr:         app.config.addr,
+		Addr:         app.Config.Addr,
 		Handler:      mux,
 		WriteTimeout: time.Second * 30,
 		ReadTimeout:  time.Second * 10,
 		IdleTimeout:  time.Minute,
 	}
 
-	// TODO: enable websockets listen
-	//log.Println("Starting channel listener")
-	//go handlers.ListenToWsChannel()
+	log.Println("Starting websocket channel listener")
+	go wsh.ListenToWsChannel()
 
+	log.Printf("Starting http server at %s", srv.Addr)
 	return srv.ListenAndServe()
 }

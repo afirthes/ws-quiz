@@ -6,7 +6,7 @@ import (
 )
 
 func writeJSON(w http.ResponseWriter, status int, data any) error {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "Application/json")
 	w.WriteHeader(status)
 	return json.NewEncoder(w).Encode(data)
 }
@@ -29,7 +29,7 @@ func writeJSONError(w http.ResponseWriter, status int, message string) error {
 	return writeJSON(w, status, &envelope{Error: message})
 }
 
-func (app *application) jsonResponse(w http.ResponseWriter, status int, data any) error {
+func (app *Application) jsonResponse(w http.ResponseWriter, status int, data any) error {
 	type envelope struct {
 		Data any `json:"data"`
 	}

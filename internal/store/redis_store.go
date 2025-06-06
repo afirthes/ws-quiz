@@ -1,13 +1,6 @@
 package store
 
-import (
-	"github.com/redis/go-redis/v9"
-)
-
-type QuizStore interface {
-	GetQuiz(uuid string)
-	SaveQuiz(uuid string)
-}
+import "github.com/redis/go-redis/v9"
 
 type QuizRedisStore struct {
 	rdb *redis.Client

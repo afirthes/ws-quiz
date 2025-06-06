@@ -6,43 +6,36 @@ import (
 )
 
 type WSManager struct {
-	conns map[string]*websocket.Conn
-	mu    sync.RWMutex
+	conns sync.Map
 }
 
 func NewConnectionManager() *WSManager {
-	return &WSManager{
-		conns: make(map[string]*websocket.Conn),
-	}
+	return &WSManager{}
 }
 
 func (cm *WSManager) Add(id string, conn *websocket.Conn) {
-	cm.mu.Lock()
-	defer cm.mu.Unlock()
-	cm.conns[id] = conn
+	cm.conns.Store(id, conn)
 }
 
 func (cm *WSManager) Remove(id string) {
-	cm.mu.Lock()
-	defer cm.mu.Unlock()
-	delete(cm.conns, id)
+	cm.conns.Delete(id)
 }
 
 func (cm *WSManager) Get(id string) (*websocket.Conn, bool) {
-	cm.mu.RLock()
-	defer cm.mu.RUnlock()
-	conn, ok := cm.conns[id]
-	return conn, ok
+	conn, ok := cm.conns.Load(id)
+	if !ok {
+		return nil, false
+	}
+	return conn.(*websocket.Conn), true
 }
 
 func (cm *WSManager) Broadcast(message []byte) {
-	cm.mu.RLock()
-	defer cm.mu.RUnlock()
-	for _, conn := range cm.conns {
-		err := conn.WriteMessage(websocket.TextMessage, message)
-		if err != nil {
+	cm.conns.Range(func(_, value any) bool {
+		conn := value.(*websocket.Conn)
+		if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
 			// TODO: log error
-			return
+			return false // stop iteration on error (optional)
 		}
-	}
+		return true
+	})
 }

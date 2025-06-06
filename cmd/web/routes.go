@@ -2,19 +2,19 @@ package main
 
 import (
 	"github.com/afirthes/ws-quiz/internal/handlers"
-	"github.com/bmizerany/pat"
+	"github.com/go-chi/chi/v5"
 	"net/http"
 )
 
-func routes(rh *handlers.RestHandlers) http.Handler {
-	mux := pat.New()
+func routes(rh *handlers.RestHandlers, wsh *handlers.WsHandlers) http.Handler {
+	r := chi.NewRouter()
 
-	mux.Get("/", http.HandlerFunc(rh.Home))
+	r.Get("/", rh.Home)
+	r.Get("/ws", wsh.WsEndpoint)
 
-	// TODO: enable ws
-	//mux.Get("/ws", http.HandlerFunc(handlers.WsEndpoint))
+	// Статические файлы
+	fileServer := http.StripPrefix("/static/", http.FileServer(http.Dir("./static/")))
+	r.Handle("/static/*", fileServer)
 
-	fileServer := http.FileServer(http.Dir("./static/"))
-	mux.Get("/static/", http.StripPrefix("/static", fileServer))
-	return mux
+	return r
 }

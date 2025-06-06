@@ -4,16 +4,17 @@ import (
 	"github.com/afirthes/ws-quiz/internal/env"
 	"github.com/afirthes/ws-quiz/internal/errors"
 	"github.com/afirthes/ws-quiz/internal/handlers"
+	"github.com/afirthes/ws-quiz/internal/services"
 	"go.uber.org/zap"
 	"log"
 )
 
 var version = "0.0.1"
 
-type config struct {
-	addr string
-	env  string
-	rdb  rdbConfig
+type Config struct {
+	Addr string
+	Env  string
+	Rdb  rdbConfig
 }
 
 type rdbConfig struct {
@@ -22,9 +23,9 @@ type rdbConfig struct {
 
 func main() {
 
-	config := config{
-		addr: env.GetString("APP_ADDR", ":8080"),
-		rdb: rdbConfig{
+	config := Config{
+		Addr: env.GetString("APP_ADDR", ":8080"),
+		Rdb: rdbConfig{
 			addr: env.GetString("REDIS_ADDR", "localhost:6379"),
 		},
 	}
@@ -36,17 +37,20 @@ func main() {
 	// Error handler
 	errorHandler := errors.NewErrorHandler(logger)
 
-	app := &application{
-		config:       config,
-		logger:       logger,
-		errorHandler: errorHandler,
+	app := &Application{
+		Config:       config,
+		Logger:       logger,
+		ErrorHandler: errorHandler,
+		UserService:  services.NewUserService(logger),
+		QuizService:  services.NewQuizService(logger),
 	}
 
-	handlers := handlers.NewRestHandlers(logger, errorHandler)
+	restHandlers := handlers.NewRestHandlers(logger, errorHandler)
+	wsHandlers := handlers.NewWebsocketsHandlers(logger, errorHandler, app.UserService, app.QuizService)
 
-	err := app.run(routes(handlers))
+	err := app.run(routes(restHandlers, wsHandlers), wsHandlers)
 	if err != nil {
-		log.Fatalf("Error starting application: %v", err)
+		log.Fatalf("Error starting Application: %v", err)
 	}
 
 }
