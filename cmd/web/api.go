@@ -2,8 +2,6 @@ package main
 
 import (
 	"github.com/afirthes/ws-quiz/internal/errors"
-	"github.com/afirthes/ws-quiz/internal/handlers"
-	"github.com/afirthes/ws-quiz/internal/services"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
@@ -16,8 +14,6 @@ type Application struct {
 	Config       Config
 	Logger       *zap.SugaredLogger
 	ErrorHandler *errors.ErrorHandler
-	QuizService  *services.QuizService
-	UserService  *services.UserService
 }
 
 func (app *Application) mount() http.Handler {
@@ -40,7 +36,7 @@ func (app *Application) mount() http.Handler {
 	return r
 }
 
-func (app *Application) run(mux http.Handler, wsh *handlers.WsHandlers) error {
+func (app *Application) run(mux http.Handler) error {
 	srv := &http.Server{
 		Addr:         app.Config.Addr,
 		Handler:      mux,
@@ -48,9 +44,6 @@ func (app *Application) run(mux http.Handler, wsh *handlers.WsHandlers) error {
 		ReadTimeout:  time.Second * 10,
 		IdleTimeout:  time.Minute,
 	}
-
-	log.Println("Starting websocket channel listener")
-	go wsh.ListenToWsChannel()
 
 	log.Printf("Starting http server at %s", srv.Addr)
 	return srv.ListenAndServe()

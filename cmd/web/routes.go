@@ -34,11 +34,10 @@ type Image struct {
 	Type        string `json:"type"`
 }
 
-func routes(rh *handlers.RestHandlers, wsh *handlers.WsHandlers) http.Handler {
+func routes(rh *handlers.RestHandlers) http.Handler {
 	r := chi.NewRouter()
 
 	r.Get("/", rh.LoadImageMain)
-	r.Get("/ws", wsh.WsEndpoint)
 	r.Post("/upload", uploadHandler)
 
 	r.Get("/c/{id}", resultPage)

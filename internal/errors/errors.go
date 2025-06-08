@@ -8,10 +8,7 @@ import (
 )
 
 var (
-	ErrorRenderingTemplate    = errors.New("error rendering template")
-	ErrorUserIDRequired       = errors.New("user-name required")
-	ErrorUserNameRequired     = errors.New("user-uuid required")
-	ErrorUserAlreadyConnected = errors.New("user already connected, more than one connection is not allowed")
+	ErrorRenderingTemplate = errors.New("error rendering template")
 )
 
 type ErrorHandler struct {

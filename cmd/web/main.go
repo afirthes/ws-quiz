@@ -5,7 +5,6 @@ import (
 	"github.com/afirthes/ws-quiz/internal/env"
 	"github.com/afirthes/ws-quiz/internal/errors"
 	"github.com/afirthes/ws-quiz/internal/handlers"
-	"github.com/afirthes/ws-quiz/internal/services"
 	"go.uber.org/zap"
 	"log"
 )
@@ -50,14 +49,11 @@ func main() {
 		Config:       config,
 		Logger:       logger,
 		ErrorHandler: errorHandler,
-		UserService:  services.NewUserService(logger),
-		QuizService:  services.NewQuizService(logger),
 	}
 
 	restHandlers := handlers.NewRestHandlers(logger, errorHandler)
-	wsHandlers := handlers.NewWebsocketsHandlers(logger, errorHandler, app.UserService, app.QuizService)
 
-	err = app.run(routes(restHandlers, wsHandlers), wsHandlers)
+	err = app.run(routes(restHandlers))
 	if err != nil {
 		log.Fatalf("Error starting Application: %v", err)
 	}
