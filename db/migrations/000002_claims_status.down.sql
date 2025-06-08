@@ -1,0 +1,3 @@
+ALTER TABLE claims
+DROP
+COLUMN status;

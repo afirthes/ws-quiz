@@ -1,0 +1,2 @@
+ALTER TABLE claims
+    ADD COLUMN status TEXT NOT NULL DEFAULT 'new';
