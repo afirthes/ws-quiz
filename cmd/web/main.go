@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"github.com/afirthes/ws-quiz/internal/env"
 	"github.com/afirthes/ws-quiz/internal/errors"
 	"github.com/afirthes/ws-quiz/internal/handlers"
@@ -21,7 +22,15 @@ type rdbConfig struct {
 	addr string
 }
 
+var db *sql.DB
+
 func main() {
+
+	var err error
+	db, err = sql.Open("postgres", "postgres://admin:adminpassword@localhost:5432/avitodb?sslmode=disable")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	config := Config{
 		Addr: env.GetString("APP_ADDR", ":8080"),
@@ -48,7 +57,7 @@ func main() {
 	restHandlers := handlers.NewRestHandlers(logger, errorHandler)
 	wsHandlers := handlers.NewWebsocketsHandlers(logger, errorHandler, app.UserService, app.QuizService)
 
-	err := app.run(routes(restHandlers, wsHandlers), wsHandlers)
+	err = app.run(routes(restHandlers, wsHandlers), wsHandlers)
 	if err != nil {
 		log.Fatalf("Error starting Application: %v", err)
 	}

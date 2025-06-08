@@ -59,3 +59,13 @@ func (rh *RestHandlers) Home(w http.ResponseWriter, r *http.Request) {
 		rh.errorHandler.InternalServerError(w, r, errors.ErrorRenderingTemplate)
 	}
 }
+
+func (rh *RestHandlers) LoadImageMain(w http.ResponseWriter, r *http.Request) {
+
+	err := template.LoadImageMain().Render(r.Context(), w)
+
+	if err != nil {
+		rh.log.Error("Error rendering template", zap.Error(err))
+		rh.errorHandler.InternalServerError(w, r, errors.ErrorRenderingTemplate)
+	}
+}

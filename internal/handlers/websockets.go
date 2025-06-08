@@ -48,8 +48,8 @@ func NewWebsocketsHandlers(log *zap.SugaredLogger, eh *errors.ErrorHandler, us *
 }
 
 func (wsh *WsHandlers) WsEndpoint(w http.ResponseWriter, r *http.Request) {
-	userUUID := r.URL.Query().Get("user-id")
-	userName := r.URL.Query().Get("user-name")
+	userUUID := r.Header.Get("user-uuid")
+	userName := r.Header.Get("user-name")
 
 	if userUUID == "" {
 		wsh.errorHandler.BadRequestResponse(w, r, errors.ErrorUserIDRequired)

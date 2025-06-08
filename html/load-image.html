@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Загрузка фото — Аскан</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#121212] text-white font-sans min-h-screen">
+<div class="min-h-screen flex flex-col lg:flex-row">
+
+    <!-- Sidebar -->
+    <aside class="bg-[#181818] w-full lg:w-64 p-5 flex flex-col justify-between
+                   lg:fixed lg:h-[calc(100vh-2rem)] m-0 lg:m-4
+                   rounded-none lg:rounded-2xl lg:shadow-xl z-20">
+        <div>
+            <div class="flex items-center gap-2 mb-6">
+                <div class="w-4 h-4 rounded-full bg-gradient-to-r from-cyan-400 via-green-400 to-pink-500"></div>
+                <span class="text-white font-bold text-lg">Аскан</span>
+            </div>
+            <nav class="space-y-3 text-sm text-white">
+                <button class="flex items-center gap-2 hover:text-gray-300">
+                    <span>🖲️</span> Новое сканирование
+                </button>
+                <div class="mt-6">
+                    <p class="text-gray-400 mb-2">Мои сканирования</p>
+                    <ul class="space-y-1 pl-2">
+                        <li class="text-white truncate font-medium">Кузовные повреждения: сильная...</li>
+                        <li class="text-gray-400">Битое крыло на правой части</li>
+                        <li class="text-gray-400">Разбитый верхний</li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+        <button class="bg-zinc-800 text-white text-sm mt-6 px-4 py-2 rounded-xl hover:bg-zinc-700">
+            Вернуться в Авито
+        </button>
+    </aside>
+
+    <!-- Main -->
+    <main class="flex-1 px-4 py-8 flex items-center justify-center lg:ml-[288px]">
+        <div id="dropzone" class="border-dashed border-2 border-zinc-600 rounded-2xl p-8 text-center cursor-pointer transition hover:bg-zinc-800 max-w-md w-full">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 mx-auto text-white mb-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2a5 5 0 0 0-5 5v2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-2V7a5 5 0 0 0-5-5z"/>
+            </svg>
+            <h2 class="text-white font-semibold text-lg">Загрузите фото</h2>
+            <p class="text-gray-400 text-sm mt-2">Перетащите изображения сюда</p>
+        </div>
+    </main>
+
+</div>
+
+
+<script>
+    const dropzone = document.getElementById("dropzone");
+
+    dropzone.addEventListener("drop", async (e) => {
+        e.preventDefault();
+        dropzone.classList.remove("bg-zinc-800");
+
+        const files = [...e.dataTransfer.files];
+        const formData = new FormData();
+
+        files.forEach(file => {
+            const ext = file.name.split('.').pop(); // получаем расширение
+            const uuid = crypto.randomUUID();       // генерируем UUID
+            const newFileName = `${uuid}.${ext}`;   // создаём новое имя
+
+            const renamedFile = new File([file], newFileName, {
+                type: file.type,
+                lastModified: file.lastModified,
+            });
+
+            formData.append("photos", renamedFile);
+        });
+
+        try {
+            const response = await fetch("http://localhost:8080/upload", {
+                method: "POST",
+                body: formData,
+            });
+
+            const text = await response.text();
+            alert("Ответ от сервера: " + text);
+        } catch (err) {
+            alert("Ошибка загрузки: " + err.message);
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,155 @@
+package template
+
+import "encoding/json"
+
+type Claim struct {
+	ID      string
+	Details json.RawMessage
+}
+
+type Image struct {
+	ID          int
+	ClaimID     string
+	Filename    string
+	Description string
+	Type        string
+}
+
+templ Result(c Claim, imgs []Image) {
+	<!DOCTYPE html>
+	<html lang="ru">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>Аскан — Повреждения</title>
+			<script src="/static/tailwind.js"></script>
+		</head>
+		<body class="bg-[#121212] text-white font-sans">
+			<!-- Wrapper -->
+			<div class="min-h-screen">
+				<!-- Sidebar -->
+				<aside class="bg-[#181818] lg:w-64 w-full lg:fixed top-4 left-4 rounded-2xl shadow-xl p-5 flex flex-col justify-between z-20 h-auto lg:h-[calc(100vh-2rem)]">
+					<div>
+						<!-- Логотип -->
+						<div class="flex items-center gap-2 mb-6">
+							<div class="w-4 h-4 rounded-full bg-gradient-to-r from-cyan-400 via-green-400 to-pink-500"></div>
+							<span class="text-white font-bold text-lg">Аскан</span>
+						</div>
+						<!-- Навигация -->
+						<nav class="space-y-3 text-sm text-white">
+							<button class="flex items-center gap-2 hover:text-gray-300">
+								<span>🖲️</span> Новое сканирование
+							</button>
+							<div class="mt-6">
+								<p class="text-gray-400 mb-2">Мои сканирования</p>
+								<ul class="space-y-1 pl-2">
+									<li class="text-white truncate font-medium">Кузовные повреждения: сильная...</li>
+									<li class="text-gray-400">Битое крыло на правой части</li>
+									<li class="text-gray-400">Разбитый верхний</li>
+								</ul>
+							</div>
+						</nav>
+					</div>
+					<!-- Кнопка снизу -->
+					<button class="bg-zinc-800 text-white text-sm mt-6 px-4 py-2 rounded-xl hover:bg-zinc-700">
+						Вернуться в Авито
+					</button>
+				</aside>
+				<!-- Main content -->
+				<main class="pt-8 px-6 lg:pl-[304px]">
+					<!-- 288px + 16px внутреннего отступа -->
+					<div class="max-w-[1000px] mx-auto">
+						<!-- Sticky Header -->
+						<div class="sticky top-0 z-10 bg-[#121212] pt-6 pb-4">
+							<h1 class="text-xl font-semibold">
+								Кузовные повреждения: сильная деформация капота — не подлежит замене
+							</h1>
+						</div>
+						<!-- Thumbnails -->
+						<!-- Thumbnails -->
+						<!-- Thumbnails -->
+						<div class="flex flex-wrap gap-4 mb-6">
+							for i, img := range imgs {
+								<button
+									onclick={ templ.JSFuncCall("changeMainImage", "http://localhost:8080/static/processed/"+img.Filename) }
+									class="flex items-center gap-2 bg-zinc-800 px-4 py-2 rounded-xl text-sm hover:bg-zinc-700 transition"
+									type="button"
+								>
+									<img
+										src={ "/static/processed/" + img.Filename }
+										alt="thumb"
+										class="w-8 h-8 rounded-xl object-cover border border-zinc-600"
+									/>
+									<span>Фото-{ i + 1 }</span>
+								</button>
+							}
+						</div>
+						<!-- Main layout: Image + Right side -->
+						<div class="flex flex-col lg:flex-row gap-6">
+							<!-- Image -->
+							<!-- Image -->
+							<div class="lg:w-1/2 w-full">
+								if len(imgs) > 0 {
+									<img id="main-image" src={ "/static/processed/" + imgs[0].Filename } alt="Поврежденная машина" class="rounded-xl w-full object-cover"/>
+								}
+							</div>
+							<!-- Right Column -->
+							<div class="lg:w-1/2 w-full flex flex-col gap-6">
+								<!-- Report -->
+								<div class="bg-zinc-800 rounded-xl p-6 space-y-4">
+									<h2 class="text-lg font-semibold">Обнаруженные повреждения:</h2>
+									<div class="space-y-3 text-sm">
+										<div>
+											<p class="font-semibold">Кузовные повреждения</p>
+											<ul class="list-disc list-inside text-gray-300">
+												<li>Сильная деформация капота — не подлежит замене</li>
+												<li>Полностью разрушен передний бампер</li>
+												<li>Решётка радиатора выломана, отсутствуют элементы конструкции</li>
+											</ul>
+										</div>
+										<div>
+											<p class="font-semibold">Стеклянные элементы</p>
+											<ul class="list-disc list-inside text-gray-300">
+												<li>Лобовое стекло с трещиной — требует замены</li>
+											</ul>
+										</div>
+										<div>
+											<p class="font-semibold">Потенциальные скрытые дефекты</p>
+											<ul class="list-disc list-inside text-gray-300">
+												<li>Поврежден радиатор, система охлаждения и силовые элементы передней части кузова</li>
+											</ul>
+										</div>
+									</div>
+								</div>
+								<!-- Conclusion -->
+								<div class="bg-zinc-800 rounded-xl p-6 space-y-4">
+									<div class="flex justify-between items-center">
+										<h2 class="text-lg font-semibold">Заключение</h2>
+										<button class="bg-zinc-700 hover:bg-zinc-600 text-sm px-4 py-1 rounded-md">Скачать акт</button>
+									</div>
+									<ul class="list-disc list-inside text-sm text-gray-300 space-y-1">
+										<li>Серьёзная деформация передней части кузова</li>
+										<li>Не исключено повреждение несущих элементов</li>
+										<li>Трещина на лобовом стекле является нарушением требований безопасности</li>
+										<li>Высокий риск скрытых технических неисправностей</li>
+									</ul>
+									<div class="bg-red-900/40 border border-red-600 text-red-300 p-4 rounded-md text-sm">
+										⚠️ Транспортное средство не допускается к кредитованию. Автомобиль находится в аварийном состоянии и требует значительного восстановления. Финансирование покупки в текущем виде нецелесообразно с точки зрения рисков и остаточной стоимости.
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</main>
+			</div>
+			<script>
+            function changeMainImage(src) {
+            	const main = document.getElementById("main-image");
+            	if (main) {
+            		main.src = src;
+            	}
+            }
+            </script>
+		</body>
+	</html>
+}

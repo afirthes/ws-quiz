@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Загрузка фото — Аскан</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#121212] text-white font-sans min-h-screen">
+<div class="min-h-screen flex flex-col lg:flex-row">
+
+    <!-- Sidebar -->
+    <aside class="bg-[#181818] w-full lg:w-64 p-5 flex flex-col justify-between
+                   lg:fixed lg:h-[calc(100vh-2rem)] m-0 lg:m-4
+                   rounded-none lg:rounded-2xl lg:shadow-xl z-20">
+        <div>
+            <div class="flex items-center gap-2 mb-6">
+                <div class="w-4 h-4 rounded-full bg-gradient-to-r from-cyan-400 via-green-400 to-pink-500"></div>
+                <span class="text-white font-bold text-lg">Аскан</span>
+            </div>
+            <nav class="space-y-3 text-sm text-white">
+                <button class="flex items-center gap-2 hover:text-gray-300">
+                    <span>🖲️</span> Новое сканирование
+                </button>
+                <div class="mt-6">
+                    <p class="text-gray-400 mb-2">Мои сканирования</p>
+                    <ul class="space-y-1 pl-2">
+                        <li class="text-white truncate font-medium">Кузовные повреждения: сильная...</li>
+                        <li class="text-gray-400">Битое крыло на правой части</li>
+                        <li class="text-gray-400">Разбитый верхний</li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+        <button class="bg-zinc-800 text-white text-sm mt-6 px-4 py-2 rounded-xl hover:bg-zinc-700">
+            Вернуться в Авито
+        </button>
+    </aside>
+
+    <!-- Main -->
+    <main class="flex-1 px-4 py-8 flex items-center justify-center lg:ml-[288px]">
+        <div class="bg-[#181818] rounded-2xl p-8 text-center max-w-md w-full shadow-lg">
+            <h2 class="text-xl font-semibold mb-2">Загрузите фото</h2>
+            <p class="text-sm text-gray-400 mb-6">
+                Прикрепите минимум 4 фотографии транспортного средства, сделанных с разных сторон. Фото должны быть чёткими и без посторонних предметов
+            </p>
+
+            <!-- Dropzone -->
+            <div class="border-2 border-dashed border-zinc-600 rounded-xl p-6 text-center mb-4">
+                <p class="font-semibold text-white mb-1">Загружено: 4</p>
+                <p class="text-xs text-gray-400">Минимум 4 фотографии. Максимум 10mb</p>
+            </div>
+
+            <!-- Image previews -->
+            <div class="flex justify-center gap-2 mb-6">
+                <img src="https://i.imgur.com/W1bXG0v.jpg" class="w-16 h-16 object-cover rounded-xl border border-zinc-700" alt="Preview 1" />
+                <img src="https://i.imgur.com/YVhvg9e.jpg" class="w-16 h-16 object-cover rounded-xl border border-zinc-700" alt="Preview 2" />
+                <img src="https://i.imgur.com/svq5tVc.jpg" class="w-16 h-16 object-cover rounded-xl border border-zinc-700" alt="Preview 3" />
+                <img src="https://i.imgur.com/9VR8COu.jpg" class="w-16 h-16 object-cover rounded-xl border border-zinc-700" alt="Preview 4" />
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex gap-4 justify-center">
+                <button class="flex items-center gap-2 px-5 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M9 2a1 1 0 0 0-1 1v2h2V3a1 1 0 0 0-1-1zm6 0a1 1 0 0 0-1 1v2h2V3a1 1 0 0 0-1-1zM5 6a2 2 0 0 0-2 2v2h18V8a2 2 0 0 0-2-2H5zm-2 4v8a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-8H3z"/>
+                    </svg>
+                    Сканировать
+                </button>
+                <button class="px-5 py-2 rounded-xl bg-zinc-700 text-white hover:bg-zinc-600">
+                    Сбросить
+                </button>
+            </div>
+        </div>
+    </main>
+
+</div>
+</body>
+</html>

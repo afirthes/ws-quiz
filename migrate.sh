@@ -1,0 +1,1 @@
+migrate -path db/migrations -database "postgres://admin:adminpassword@localhost:5432/avitodb?sslmode=disable" up
