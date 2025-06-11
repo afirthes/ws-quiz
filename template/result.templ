@@ -23,38 +23,83 @@ templ Result(c Claim, imgs []Image) {
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<title>Аскан — Повреждения</title>
 			<script src="/static/tailwind.js"></script>
+			<style>
+            @font-face {
+            	font-family: 'Hauora';
+            	src: url('/static/Hauora-Medium.ttf') format('truetype');
+            	font-weight: normal;
+            	font-style: normal;
+            }
+
+            body {
+            	font-family: 'Hauora', sans-serif;
+                letter-spacing: 0.01em;
+            }
+            </style>
 		</head>
 		<body class="bg-[#121212] text-white font-sans">
 			<!-- Wrapper -->
 			<div class="min-h-screen">
 				<!-- Sidebar -->
-				<aside class="bg-[#181818] lg:w-64 w-full lg:fixed top-4 left-4 rounded-2xl shadow-xl p-5 flex flex-col justify-between z-20 h-auto lg:h-[calc(100vh-2rem)]">
-					<div>
-						<!-- Логотип -->
-						<div class="flex items-center gap-2 mb-6">
-							<div class="w-4 h-4 rounded-full bg-gradient-to-r from-cyan-400 via-green-400 to-pink-500"></div>
-							<span class="text-white font-bold text-lg">Аскан</span>
-						</div>
-						<!-- Навигация -->
-						<nav class="space-y-3 text-sm text-white">
-							<button class="flex items-center gap-2 hover:text-gray-300">
-								<span>🖲️</span> Новое сканирование
-							</button>
-							<div class="mt-6">
-								<p class="text-gray-400 mb-2">Мои сканирования</p>
-								<ul class="space-y-1 pl-2">
-									<li class="text-white truncate font-medium">Кузовные повреждения: сильная...</li>
-									<li class="text-gray-400">Битое крыло на правой части</li>
-									<li class="text-gray-400">Разбитый верхний</li>
-								</ul>
-							</div>
-						</nav>
-					</div>
-					<!-- Кнопка снизу -->
-					<button class="bg-zinc-800 text-white text-sm mt-6 px-4 py-2 rounded-xl hover:bg-zinc-700">
-						Вернуться в Авито
-					</button>
-				</aside>
+            <aside class="bg-[#181818] w-full lg:w-64 p-5 flex flex-col justify-between lg:fixed lg:h-[calc(100vh-2rem)] m-0 lg:m-4 rounded-none lg:rounded-2xl lg:shadow-xl z-20">
+                <div class="flex flex-col gap-6">
+                    <div class="flex justify-center">
+                        <a href="http://localhost:8080/">
+                            <img src="/static/logo.png" alt="Аскан" class="w-28 h-auto"/>
+                        </a>
+                    </div>
+                    <nav class="space-y-4 text-sm text-white">
+                        <ul class="space-y-2">
+                            <li>
+                                <a class="flex items-center gap-3 hover:text-gray-300" href="#">
+                                    <img src="/static/Scanner.svg" alt="scan" class="w-4 h-4"/>
+                                    <span>Новое сканирование</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="flex items-center gap-3 hover:text-gray-300" href="#">
+                                    <img src="/static/Search.svg" alt="vin" class="w-4 h-4"/>
+                                    <span>Проверить VIN</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="flex items-center gap-3 hover:text-gray-300" href="#">
+                                    <img src="/static/Image.png" alt="library" class="w-4 h-4"/>
+                                    <span>Библиотека</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="flex items-center gap-3 hover:text-gray-300" href="#">
+                                    <img src="/static/Document 2.svg" alt="reports" class="w-4 h-4"/>
+                                    <span>Отчёты</span>
+                                </a>
+                            </li>
+                        </ul>
+                        <div>
+                            <p class="text-gray-400 mb-2">Мои сканирования</p>
+                            <ul class="space-y-1 pl-2">
+                                <li class="text-white bg-zinc-700 px-3 py-1 rounded-xl font-medium truncate">Кузовные повреждения: сильная...</li>
+                                <li class="text-gray-400 truncate">Битое правое крыло переднего б...</li>
+                                <li class="text-gray-400 truncate">Трещина по периметру лобового...</li>
+                                <li class="text-gray-400 truncate">Вмятина и царапины на правом з...</li>
+                                <li class="text-gray-400 truncate">Левое зеркало сломано, царапин...</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 mt-4 mb-2">Старые</p>
+                            <ul class="space-y-1 pl-2">
+                                <li class="text-gray-400 truncate">Вмятина на крыше, деформация...</li>
+                                <li class="text-gray-400 truncate">Повреждён левый порог, перекос...</li>
+                                <li class="text-gray-400 truncate">Разбит задний фонарь, вмятина н...</li>
+                                <li class="text-gray-400 truncate">Трещина в передней фаре, сколы...</li>
+                            </ul>
+                        </div>
+                    </nav>
+                </div>
+                <button class="bg-zinc-800 text-white text-sm mt-6 px-4 py-2 rounded-xl hover:bg-zinc-700">
+                    Вернуться в Авито
+                </button>
+            </aside>
 				<!-- Main content -->
 				<main class="pt-8 px-6 lg:pl-[304px]">
 					<!-- 288px + 16px внутреннего отступа -->
@@ -88,7 +133,7 @@ templ Result(c Claim, imgs []Image) {
 						<div class="flex flex-col lg:flex-row gap-6">
 							<!-- Image -->
 							<!-- Image -->
-							<div class="lg:w-1/2 w-full">
+							<div class="lg:w-1/2 w-full mb-50">
 								if len(imgs) > 0 {
 									<img id="main-image" src={ "/static/processed/" + imgs[0].Filename } alt="Поврежденная машина" class="rounded-xl w-full object-cover"/>
 								}
@@ -133,7 +178,7 @@ templ Result(c Claim, imgs []Image) {
 										<li>Трещина на лобовом стекле является нарушением требований безопасности</li>
 										<li>Высокий риск скрытых технических неисправностей</li>
 									</ul>
-									<div class="bg-red-900/40 border border-red-600 text-red-300 p-4 rounded-md text-sm">
+									<div class="hidden bg-red-900/40 border border-red-600 text-red-300 p-4 rounded-md text-sm">
 										⚠️ Транспортное средство не допускается к кредитованию. Автомобиль находится в аварийном состоянии и требует значительного восстановления. Финансирование покупки в текущем виде нецелесообразно с точки зрения рисков и остаточной стоимости.
 									</div>
 								</div>

@@ -7,9 +7,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/afirthes/ws-quiz/internal/env"
 	"github.com/afirthes/ws-quiz/internal/handlers"
 	"github.com/afirthes/ws-quiz/template"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	_ "github.com/lib/pq"
 	"github.com/segmentio/ksuid"
 	"io"
@@ -37,6 +39,13 @@ type Image struct {
 func routes(rh *handlers.RestHandlers) http.Handler {
 	r := chi.NewRouter()
 
+	// Добавляем middleware
+	r.Use(middleware.RequestID)                 // Уникальный ID для каждого запроса
+	r.Use(middleware.RealIP)                    // Получение реального IP-адреса клиента
+	r.Use(middleware.Logger)                    // Логирование всех запросов
+	r.Use(middleware.Recoverer)                 // Восстановление после паники
+	r.Use(middleware.Timeout(60 * time.Second)) // Ограничение времени запроса
+
 	r.Get("/", rh.LoadImageMain)
 	r.Post("/upload", uploadHandler)
 
@@ -56,8 +65,15 @@ func routes(rh *handlers.RestHandlers) http.Handler {
 
 	})
 
+	staticDir := env.GetString("STATIC_DIR", "./static/")
+
+	// Убедись, что директория существует
+	if _, err := os.Stat(staticDir); os.IsNotExist(err) {
+		log.Fatalf("Static directory not found: %s", staticDir)
+	}
+
 	// Статические файлы
-	fileServer := http.StripPrefix("/static/", http.FileServer(http.Dir("./static/")))
+	fileServer := http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir)))
 	r.Handle("/static/*", fileServer)
 
 	return r
@@ -65,6 +81,9 @@ func routes(rh *handlers.RestHandlers) http.Handler {
 
 func ProcessClaim(w http.ResponseWriter, r *http.Request) {
 	claimID := chi.URLParam(r, "id")
+
+	log.Println("Starting claim", claimID)
+
 	if claimID == "" {
 		http.Error(w, "missing claim id", http.StatusBadRequest)
 		return
@@ -92,7 +111,7 @@ func ProcessClaim(w http.ResponseWriter, r *http.Request) {
 	body, _ := json.Marshal(pythonReq)
 
 	// 3. Отправляем в Python-сервис
-	req, err := http.NewRequest("POST", "http://localhost:8000/check_car", bytes.NewReader(body))
+	req, err := http.NewRequest("POST", "http://localhost:9999/check_car", bytes.NewReader(body))
 	if err != nil {
 		http.Error(w, "failed to create request", http.StatusInternalServerError)
 		return
@@ -116,6 +135,7 @@ func ProcessClaim(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("{}"))
 }
 
 func deleteAllClaimImages(w http.ResponseWriter, r *http.Request) {
@@ -180,8 +200,10 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		rand.Read(random)
 		randomName := hex.EncodeToString(random) + ext
 
-		// сохраняем файл
-		savePath := filepath.Join("static/uploads", randomName)
+		staticDir := env.GetString("STATIC_DIR", "./static/")
+		uploadDir := filepath.Join(staticDir, "uploads")
+
+		savePath := filepath.Join(uploadDir, randomName)
 		dst, err := os.Create(savePath)
 		if err != nil {
 			http.Error(w, "Can't save file", http.StatusInternalServerError)

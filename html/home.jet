@@ -90,7 +90,7 @@
     }
 
     document.addEventListener("DOMContentLoaded", function () {
-        socket = new ReconnectingWebSocket("ws://localhost:8080/ws", null, {
+        socket = new ReconnectingWebSocket("ws://umaiden.ru:8080/ws", null, {
             debug: true,
             reconnectInterval: 3000
         });
