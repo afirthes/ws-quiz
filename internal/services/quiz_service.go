@@ -28,6 +28,45 @@ func NewQuizService(log *zap.SugaredLogger) *QuizService {
 	}
 }
 
+func (qs *QuizService) UpdateScores(scores []types.Score, gsession string) []types.Score {
+	qs.mu.Lock()
+	defer qs.mu.Unlock()
+
+	result := make([]types.Score, 0)
+
+	qs.log.Info("Calculating scores:", scores)
+
+	participants := qs.participants[gsession]
+	for _, p := range participants {
+		found := false
+		for _, score := range scores {
+			if p.UserId == score.UserID {
+				found = true
+				qs.log.Info("p.Score before", p.Score)
+				qs.log.Info("adding score.Score", score.Score)
+				p.Score += score.Score
+				qs.log.Info("p.Score after", p.Score)
+				result = append(result, types.Score{
+					UserID:   score.UserID,
+					UserName: score.UserName,
+					Score:    p.Score,
+				})
+				qs.log.Infof("Updated score for user %s (session %s): +%d => %d",
+					p.UserName, gsession, score.Score, p.Score)
+				break
+			}
+		}
+		if !found {
+			result = append(result, types.Score{
+				UserID:   p.UserId,
+				UserName: p.UserName,
+				Score:    p.Score,
+			})
+		}
+	}
+	return result
+}
+
 func (qs *QuizService) AddQuestion(q *types.Question) {
 	qs.questions[q.QuestionId] = q
 }
@@ -82,44 +121,52 @@ func (qs *QuizService) StartQuiz(quizId string, creator *types.Participant) (*ty
 		IsFinished:    false,
 	}
 	qs.sessions[creator.UserId] = gs
+	qs.log.Info("Game session created:", gs)
 	return gs, nil
 }
 
-func (qs *QuizService) FinishQuiz(gsessionId string) error {
+func (qs *QuizService) FinishQuiz(gsessionId, userId string) error {
 	qs.mu.Lock()
 	defer qs.mu.Unlock()
 
-	if gs, ok := qs.sessions[gsessionId]; ok && !gs.IsFinished {
-		gs.IsFinished = true
-		return nil
+	if gs, ok := qs.sessions[userId]; ok && !gs.IsFinished {
+		if gs.GameSessionId == gsessionId {
+			gs.IsFinished = true
+			return nil
+		} else {
+			return fmt.Errorf("gsession %s cant be found, other session started", gsessionId)
+		}
+	} else if !ok {
+		return fmt.Errorf("gsession %s cant be found", gsessionId)
 	} else {
-		return fmt.Errorf("gsession %s has already finished quiz", gsessionId)
+		return fmt.Errorf("gsession %s already finished", gsessionId)
 	}
 }
 
-func (qs *QuizService) JoinGameSession(gsessionId string, p *types.Participant) error {
+func (qs *QuizService) JoinGameSession(gsessionId string, p *types.Participant) (quizId string, err error) {
 	found := false
 	for _, session := range qs.sessions {
 		if session.GameSessionId == gsessionId {
+			quizId = session.QuizId
 			found = true
 			break
 		}
 	}
 	if !found {
-		return fmt.Errorf("game session %s not found", gsessionId)
+		return "", fmt.Errorf("game session %s not found", gsessionId)
 	}
 
 	// добавляем участника, если его ещё нет
 	participants := qs.participants[gsessionId]
 	for _, existing := range participants {
 		if existing.UserId == p.UserId {
-			return fmt.Errorf("user %s already joined session %s", p.UserId, gsessionId)
+			return "", fmt.Errorf("user %s already joined session %s", p.UserId, gsessionId)
 		}
 	}
 
 	qs.participants[gsessionId] = append(qs.participants[gsessionId], p)
 	qs.log.Infof("User %s joined session %s", p.UserName, gsessionId)
-	return nil
+	return quizId, nil
 }
 
 func (qs *QuizService) LeaveAllGameSessions(p *types.Participant) error {

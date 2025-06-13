@@ -12,9 +12,40 @@ templ QuizList(quizes []Quiz) {
 			for _, q := range quizes {
 				<li class="flex items-center justify-between bg-gray-50 p-3 rounded-md shadow">
 					<span class="text-gray-700 text-lg">{ q.Title }</span>
-					<button onclick={ templ.JSFuncCall("startEnglishWordsQuiz", q.Id) } class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded quiz-start">Начать</button>
+					<button onclick={ templ.JSFuncCall("startQuiz", q.Id) } class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded quiz-start">Начать</button>
 				</li>
 			}
 		</ul>
 	</div>
+	<script>
+
+	    function startQuiz(quizId) {
+            if (!socket) {
+                console.error("WebSocket not connected");
+                return;
+            }
+
+            const message = {
+                action: "START_QUIZ",
+                quiz_id: quizId
+            };
+
+            socket.send(JSON.stringify(message));
+        }
+
+        if (!window.__quizListListenerRegistered) {
+            registerWebSocketListener(function (data) {
+                if (data.action === "QUIZ_STARTED") {
+                    console.log("Component quiz_list got message:", data.quiz_id);
+                    console.log("Component quiz_list got message:", data.gsession_id);
+
+                    window.currentQuiz = {
+                        			quiz_id: data.quiz_id,
+                        			gsession_id: data.gsession_id
+                        		};
+                }
+            });
+            window.__quizListListenerRegistered = true;
+        }
+    </script>
 }

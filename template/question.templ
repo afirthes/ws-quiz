@@ -2,49 +2,171 @@ package template
 
 templ Question() {
 	<div class="bg-white p-5 rounded-lg shadow w-full md:w-1/2 relative">
+
+		<!-- Очки -->
 		<div class="absolute top-4 right-4 text-lg font-semibold text-blue-700">Очки: 125</div>
+
+		<!-- Заголовок -->
 		<h2 class="text-xl font-semibold text-gray-800 mb-4">Текущий вопрос</h2>
-		<!-- Таймер -->
-		<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
-			<div id="progressBar" class="bg-blue-500 h-3 rounded-full" style="width: 90%;"></div>
-		</div>
-		<!-- Вопрос -->
-		<input type="text" class="w-full px-4 py-2 mb-4 border border-gray-300 rounded text-base" placeholder="Введите вопрос"/>
-		<!-- Варианты ответа -->
-		<div class="space-y-3 mb-4">
-			<label class="flex items-center space-x-3 text-lg">
-				<input type="checkbox" class="text-blue-600 w-5 h-5"/>
-				<span>Ответ A</span>
-			</label>
-			<label class="flex items-center space-x-3 text-lg">
-				<input type="checkbox" class="text-blue-600 w-5 h-5"/>
-				<span>Ответ B</span>
-			</label>
-			<label class="flex items-center space-x-3 text-lg">
-				<input type="checkbox" class="text-blue-600 w-5 h-5"/>
-				<span>Ответ C</span>
-			</label>
-			<label class="flex items-center space-x-3 text-lg">
-				<input type="checkbox" class="text-blue-600 w-5 h-5"/>
-				<span>Ответ D</span>
-			</label>
-		</div>
-		<button  onclick={ templ.JSFuncCall("submitAnswer") } class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded text-base mb-4">Ответить</button>
+
+		<!-- Ожидание -->
+		<div id="question-waiting" class="text-gray-500 text-lg text-center mb-4">Ожидание вопроса...</div>
+
+		<!-- ✅ Форма -->
+		<form id="question-form" class="hidden">
+			<!-- Hidden question_id -->
+			<input type="hidden" id="questionId" name="question_id"/>
+
+			<!-- Таймер -->
+			<div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+				<div id="progressBar" class="bg-blue-500 h-3 rounded-full" style="width: 0%;"></div>
+			</div>
+
+			<!-- Вопрос -->
+			<input id="questionText" type="text" readonly class="w-full px-4 py-2 mb-4 border border-gray-300 rounded text-base"/>
+
+			<!-- Варианты ответа -->
+			<div id="answersContainer" class="space-y-3 mb-4">
+				<!-- Генерируются динамически -->
+			</div>
+
+			<!-- Кнопка -->
+			<button type="button" onclick={ templ.JSFuncCall("submitAnswer") } class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded text-base mb-4">
+				Ответить
+			</button>
+		</form>
+
 		<!-- Ответившие -->
 		<div class="border-t pt-4 mt-4">
 			<h3 class="text-lg font-semibold mb-3">Ответившие участники:</h3>
-			<div class="flex flex-wrap gap-4">
-				<!-- Пример участника -->
-				<div class="flex items-center space-x-4 bg-green-50 border border-black text-green-700 rounded px-4 py-3">
-					<img src="https://robohash.org/user5?set=set4" alt="user" class="w-14 h-14 rounded-full"/>
-					<span class="text-lg">Наташа</span>
-				</div>
-				<!-- Неправильный -->
-				<div class="flex items-center space-x-4 bg-red-50 border border-black text-red-700 rounded px-4 py-3">
-					<img src="https://robohash.org/user6?set=set4" alt="user" class="w-14 h-14 rounded-full"/>
-					<span class="text-lg">Сергей</span>
-				</div>
+			<div class="flex flex-wrap gap-4" id="answeredUsers">
+				<!-- Участники добавляются динамически -->
 			</div>
 		</div>
 	</div>
+
+	<script>
+	if (!window.__questionComponentListenerRegistered) {
+		registerWebSocketListener(function (data) {
+		    if (data.action === "QUESTION_ANSWERED_BROADCAST") {
+            	const container = document.getElementById("answeredUsers");
+            	if (!container) return;
+
+            	const existing = document.getElementById("answered-" + data.user_id);
+            	if (existing) return; // уже отображён
+
+            	// Цвет и классы по правильности
+            	const correctClass = data.correct
+            		? "bg-green-50 text-green-700"
+            		: "bg-red-50 text-red-700";
+
+            	const wrapper = document.createElement("div");
+            	wrapper.className = `flex items-center space-x-4 border border-black rounded px-4 py-3 ${correctClass}`;
+            	wrapper.id = "answered-" + data.user_id;
+
+            	const avatar = document.createElement("img");
+            	avatar.src = `https://robohash.org/${encodeURIComponent(data.user_id)}?set=set3`;
+            	avatar.alt = "user";
+            	avatar.className = "w-14 h-14 rounded-full";
+
+            	const nameSpan = document.createElement("span");
+            	nameSpan.className = "text-lg";
+            	nameSpan.textContent = data.user_name;
+
+            	wrapper.appendChild(avatar);
+            	wrapper.appendChild(nameSpan);
+            	container.appendChild(wrapper);
+            }
+			if (data.action === "NEXT_QUESTION_BROADCAST") {
+            	console.log("Получен вопрос:", data.question);
+
+            	// Очистка списка ответивших
+            	const answeredContainer = document.getElementById("answeredUsers");
+            	if (answeredContainer) {
+            		answeredContainer.innerHTML = "";
+            	}
+
+            	// Скрываем "Ожидание" и показываем форму
+            	document.getElementById("question-waiting").classList.add("hidden");
+            	document.getElementById("question-form").classList.remove("hidden");
+
+            	// Заполнение вопроса и ответов
+            	document.getElementById("questionId").value = data.question_id;
+            	document.getElementById("questionText").value = data.question;
+
+            	const answersContainer = document.getElementById("answersContainer");
+            	answersContainer.innerHTML = "";
+
+            	data.answers.forEach((answer, index) => {
+            		const label = document.createElement("label");
+            		label.className = "flex items-center space-x-3 text-lg";
+
+            		const input = document.createElement("input");
+            		input.type = "radio";
+            		input.className = "text-blue-600 w-5 h-5";
+            		input.name = "answer";
+            		input.value = index;
+
+            		const span = document.createElement("span");
+            		span.textContent = answer;
+
+            		label.appendChild(input);
+            		label.appendChild(span);
+            		answersContainer.appendChild(label);
+            	});
+
+            	// Прогресс-бар
+            	const progressBar = document.getElementById("progressBar");
+            	progressBar.style.width = "0%";
+
+            	let width = 0;
+            	const interval = setInterval(() => {
+            		if (width >= 100) {
+            			clearInterval(interval);
+            		} else {
+            			width++;
+            			progressBar.style.width = width + '%';
+            		}
+            	}, 50);
+            }
+		});
+
+		window.__questionComponentListenerRegistered = true;
+	}
+
+    function submitAnswer() {
+        if (!socket) {
+            console.error("Нет WebSocket-соединения");
+            return;
+        }
+
+        const selected = document.querySelector('input[name="answer"]:checked');
+        if (!selected) {
+            alert("Пожалуйста, выберите один из ответов");
+            return;
+        }
+
+        const answerIndex = parseInt(selected.value, 10);
+        const questionId = document.getElementById("questionId").value;
+
+        if (!window.currentQuiz || !window.currentQuiz.gsession_id) {
+            console.error("gsession_id отсутствует");
+            return;
+        }
+
+        const message = {
+            action: "ANSWER_QUESTION",
+            question_id: questionId,
+            gsession_id: window.currentQuiz.gsession_id,
+            answer: answerIndex
+        };
+
+        console.log("Отправка ответа:", message);
+        socket.send(JSON.stringify(message));
+
+        // Скрываем форму, показываем ожидание
+        document.getElementById("question-form").classList.add("hidden");
+        document.getElementById("question-waiting").classList.remove("hidden");
+    }
+	</script>
 }

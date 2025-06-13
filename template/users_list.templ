@@ -4,22 +4,184 @@ templ UsersList() {
 	<div class="bg-white p-5 rounded-lg shadow w-full md:w-1/2 flex flex-col justify-between">
 		<div>
 			<h2 class="text-xl font-semibold text-gray-800 mb-4">Участники</h2>
-			<div class="flex flex-wrap gap-4 mb-6">
-				<!-- Участник -->
-				<div class="flex items-center space-x-4 border border-gray-300 rounded px-4 py-3">
-					<img src="https://robohash.org/user1?set=set3" alt="user" class="w-14 h-14 rounded-full"/>
-					<div>
-						<span class="text-gray-700 text-lg">Анна</span>
-						<br/>
-						<span class="text-sm text-gray-500">Очки: 120</span>
-					</div>
-				</div>
-				<!-- Копировать и вставить блоки участников по аналогии -->
+			<!-- 🔽 Контейнер, куда будем добавлять -->
+			<div id="users-list" class="flex flex-wrap gap-4 mb-6">
+				<!-- Участники будут добавляться сюда -->
 			</div>
 		</div>
-		<div class="flex justify-between gap-4">
-			<button onclick={ templ.JSFuncCall("startQuiz") } class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded text-base w-full">Начать викторину</button>
-			<button onclick={ templ.JSFuncCall("cancelQuiz") } class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded text-base w-full">Прервать викторину</button>
+		<div class="flex justify-between gap-4 flex-wrap">
+			<button id="start-quiz-button" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded text-base w-full">Отослать вопрос</button>
+			<button id="stop-quiz-button" class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded text-base w-full">Завершить викторину</button>
+			<button id="finish-question-button" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded text-base w-full">Завершить вопрос</button>
 		</div>
 	</div>
+
+<script>
+	if (!window.__userListListenerRegistered) {
+		registerWebSocketListener(function (data) {
+		    if (data.action === "QUESTION_FINISHED_BROADCAST") {
+            	console.log("Завершён вопрос, обновление очков");
+
+            	if (!Array.isArray(data.scores)) return;
+
+            	data.scores.forEach(scoreObj => {
+            		const userEl = document.getElementById("user-" + scoreObj.user_id);
+            		if (!userEl) return;
+
+            		const spans = userEl.getElementsByTagName("span");
+            		for (let span of spans) {
+            			if (span.textContent.startsWith("Очки:")) {
+            				span.textContent = `Очки: ${scoreObj.score}`;
+            				break;
+            			}
+            		}
+            	});
+            }
+			if (data.action === "ENTERED_QUIZ_BROADCAST") {
+				console.log("User joined:", data.user_name);
+
+				const container = document.getElementById("users-list");
+				if (!container) return;
+
+				if (document.getElementById("user-" + data.user_id)) return;
+
+				const wrapper = document.createElement("div");
+				wrapper.className = "flex items-center space-x-4 border border-gray-300 rounded px-4 py-3";
+				wrapper.id = "user-" + data.user_id;
+
+				const avatar = document.createElement("img");
+				avatar.src = `https://robohash.org/${encodeURIComponent(data.user_id)}?set=set3`;
+				avatar.alt = "user";
+				avatar.className = "w-14 h-14 rounded-full";
+
+				const info = document.createElement("div");
+				info.innerHTML = `
+					<span class="text-gray-700 text-lg">${data.user_name}</span><br/>
+					<span class="text-sm text-gray-500">Очки: 0</span>
+				`;
+
+				wrapper.appendChild(avatar);
+				wrapper.appendChild(info);
+				container.appendChild(wrapper);
+			}
+		});
+
+		window.__userListListenerRegistered = true;
+	}
+
+	document.addEventListener("DOMContentLoaded", function () {
+		const startQuizButton = document.getElementById("start-quiz-button");
+		const stopQuizButton = document.getElementById("stop-quiz-button");
+		const finishQuestionButton = document.getElementById("finish-question-button");
+
+		stopQuizButton.addEventListener("click", function () {
+			if (!socket) {
+				console.error("Нет WebSocket-соединения");
+				return;
+			}
+
+			if (!window.currentQuiz || !window.currentQuiz.gsession_id) {
+				console.error("gsession_id не установлен");
+				return;
+			}
+
+			const message = {
+				action: "FINISH_QUIZ_SESSION",
+				gsession_id: window.currentQuiz.gsession_id,
+				user_id: window.currentUser.user_id
+			};
+
+			console.log("Завершение викторины:", message);
+			socket.send(JSON.stringify(message));
+		});
+
+		finishQuestionButton.addEventListener("click", function () {
+			if (!socket) {
+				console.error("Нет WebSocket-соединения");
+				return;
+			}
+
+			if (!window.currentQuiz || !window.currentQuiz.gsession_id) {
+				console.error("gsession_id не установлен");
+				return;
+			}
+
+			const questions = window.quizzesData?.[0]?.questions;
+			const lastIndex = window.currentQuestionIndex - 1;
+
+			if (!questions || lastIndex < 0 || !questions[lastIndex]) {
+				console.error("Нет предыдущего вопроса");
+				return;
+			}
+
+			let questionId = questions[lastIndex].question_id;
+
+			if (!questionId && window.lastSentQuestionId) {
+				questionId = window.lastSentQuestionId;
+			}
+
+			if (!questionId) {
+				alert("Не удалось определить question_id");
+				return;
+			}
+
+			const message = {
+				action: "FINISH_QUESTION",
+				gsession_id: window.currentQuiz.gsession_id,
+				question_id: questionId
+			};
+
+			console.log("Завершение вопроса:", message);
+			socket.send(JSON.stringify(message));
+		});
+
+		if (window.currentQuestionIndex === undefined) {
+			window.currentQuestionIndex = 0;
+		}
+
+		startQuizButton.addEventListener("click", function () {
+			if (!socket) {
+				console.error("Нет WebSocket-соединения");
+				return;
+			}
+			if (!window.quizzesData || !window.quizzesData[0] || !window.quizzesData[0].questions.length) {
+				console.error("Нет данных викторины");
+				return;
+			}
+			if (!window.currentQuiz || !window.currentQuiz.gsession_id) {
+				console.error("gsession_id (текущая сессия) не задана");
+				return;
+			}
+
+			const questions = window.quizzesData[0].questions;
+
+			if (window.currentQuestionIndex >= questions.length) {
+				alert("Вопросы закончились!");
+				return;
+			}
+
+			const question = questions[window.currentQuestionIndex];
+			const questionId = generate();
+
+			// Сохраняем question_id в вопрос и глобально
+			question.question_id = questionId;
+			window.lastSentQuestionId = questionId;
+
+			const message = {
+				action: "NEXT_QUESTION",
+				gsession_id: window.currentQuiz.gsession_id,
+				question_id: questionId,
+				question: question.question,
+				answers: question.answers,
+				correct_answer: question.correct_answer,
+				cost: question.cost
+			};
+
+			console.log("Отправка вопроса:", message);
+			socket.send(JSON.stringify(message));
+
+			window.currentQuestionIndex++;
+		});
+	});
+</script>
 }

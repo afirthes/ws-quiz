@@ -35,14 +35,6 @@ func (rh *RestHandlers) Home(w http.ResponseWriter, r *http.Request) {
 			Title: "Викторина на знание английских слов",
 			Id:    "1",
 		},
-		{
-			Title: "Викторина на знание столиц",
-			Id:    "2",
-		},
-		{
-			Title: "Викторина на общеобразовательные знания (общая эрудиция)",
-			Id:    "3",
-		},
 	}
 
 	err := template.RootLayout("Quizzer page",

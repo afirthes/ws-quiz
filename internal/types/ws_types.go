@@ -9,6 +9,12 @@ type WsPayload struct {
 	Action string `json:"action"`
 }
 
+type WsConnectedResponse struct {
+	WsPayload
+	UserId   string `json:"user_id"`
+	UserName string `json:"user_name"`
+}
+
 type WsStartQuizRequest struct {
 	WsPayload
 	QuizId string `json:"quiz_id"`
@@ -28,6 +34,7 @@ type WsEnterQuizRequest struct {
 type WsEnterQuizResponse struct {
 	WsPayload
 	UserId     string `json:"user_id"`
+	QuizId     string `json:"quiz_id"`
 	GSessionId string `json:"gsession_id"`
 }
 
@@ -102,6 +109,7 @@ type WsFinishQuestionBroadcast struct {
 type WsFinishQuizRequest struct {
 	WsPayload
 	GSessionId string `json:"gsession_id"`
+	UserID     string `json:"user_id"`
 }
 
 type WsFinishQuizBroadcast struct {

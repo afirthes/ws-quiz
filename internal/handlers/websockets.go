@@ -114,8 +114,10 @@ func (wsh *WsHandlers) WsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Client connected to server: %s %s ", userName, userUUID)
 
-	var response types.WsPayload
+	var response types.WsConnectedResponse
 	response.Action = "CONNECTED"
+	response.UserId = userUUID
+	response.UserName = userName
 
 	if _, ok := wsh.clients[p.UserId]; !ok {
 		wsh.clients[p.UserId] = pc
@@ -194,7 +196,7 @@ func (wsh *WsHandlers) handleMessage(p *WsPayloadWithParticipant) error {
 		if err := json.Unmarshal(p.msg, &req); err != nil {
 			return fmt.Errorf("failed to parse WsStartQuizRequest: %w", err)
 		}
-		err := wsh.quizService.JoinGameSession(req.GSessionId, p.participant.Participant)
+		quizId, err := wsh.quizService.JoinGameSession(req.GSessionId, p.participant.Participant)
 		if err != nil {
 			return err
 		}
@@ -205,7 +207,7 @@ func (wsh *WsHandlers) handleMessage(p *WsPayloadWithParticipant) error {
 		log.Printf("User %s joining quiz with id: %s", p.participant.UserName, req.GSessionId)
 		res := types.WsEnterQuizResponse{
 			WsPayload:  types.WsPayload{Action: "ENTERED_QUIZ"},
-			UserId:     p.participant.UserId,
+			QuizId:     quizId,
 			GSessionId: req.GSessionId,
 		}
 		err = p.participant.Conn.WriteJSON(res)
@@ -276,31 +278,33 @@ func (wsh *WsHandlers) handleMessage(p *WsPayloadWithParticipant) error {
 		answers := wsh.quizService.GetAnswers(req.QuestionId)
 
 		n := len(answers)
-		if n == 0 {
-			return nil
+
+		scores := make([]types.Score, 0, n)
+
+		if n != 0 {
+			step := float64(q.Cost) / float64(n)
+			for i, userID := range answers {
+				score := float64(q.Cost) - step*float64(i)
+				if score < 0 {
+					score = 0
+				}
+				if u, ok := wsh.clients[userID]; ok {
+					scores = append(scores, types.Score{
+						UserName: u.UserName,
+						UserID:   u.UserId,
+						Score:    int(score),
+					})
+				}
+			}
 		}
+
+		scores = wsh.quizService.UpdateScores(scores, req.GSessionId)
 
 		broadcast := types.WsFinishQuestionBroadcast{
 			WsPayload:  types.WsPayload{Action: "QUESTION_FINISHED_BROADCAST"},
 			QuestionId: req.QuestionId,
 			GSessionId: req.GSessionId,
-			Scores:     make([]types.Score, 0, n),
-		}
-
-		step := float64(q.Cost) / float64(n)
-		for i, userID := range answers {
-			score := float64(q.Cost) - step*float64(i)
-			if score < 0 {
-				score = 0
-			}
-			if u, ok := wsh.clients[userID]; ok {
-				u.Score += int(score)
-				broadcast.Scores = append(broadcast.Scores, types.Score{
-					UserName: u.UserName,
-					UserID:   u.UserId,
-					Score:    int(score),
-				})
-			}
+			Scores:     scores,
 		}
 
 		wsh.broadcastAll(broadcast, req.GSessionId)
@@ -312,7 +316,7 @@ func (wsh *WsHandlers) handleMessage(p *WsPayloadWithParticipant) error {
 			return fmt.Errorf("failed to parse WsStartQuizRequest: %w", err)
 		}
 
-		err := wsh.quizService.FinishQuiz(req.GSessionId)
+		err := wsh.quizService.FinishQuiz(req.GSessionId, req.UserID)
 		if err != nil {
 			return fmt.Errorf("failed to finish quiz: %w", err)
 		}
